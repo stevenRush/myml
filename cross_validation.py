@@ -7,7 +7,7 @@ def _cv_score(estimator, X, y, scoring=None, cv=None):
 
 def average_cross_val_score(estimator, X, y, scoring=None, cv=None, n_iter=5, cores=16):
     from multiprocessing import Pool
-    
+    import numpy as np
     
     results = []
     p = Pool(processes=cores)
