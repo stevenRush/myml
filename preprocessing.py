@@ -1,6 +1,6 @@
 import pandas as pd
 
-def calculate_statistics(train, test, field, by_field, statistics=['mean']):
+def calculate_statistics(train, test, by_field, field, statistics=['mean']):
     '''Encodes mean of field for every value in by_field'''
 
     df = pd.concat([train, test]).reset_index(drop = True)
