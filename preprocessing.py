@@ -14,3 +14,14 @@ def calc_mean(train, test, field, by_field):
 
     return train, test
 
+
+def calculate_counts(train, test, field):
+    df = pd.concat([train, test]).reset_index(drop = True)
+    train_idx = range(train.shape[0])
+    test_idx = range(train.shape[0], df.shape[0])
+
+    counts = pd.DataFrame(df.groupby(field).count().iloc[:, 0])
+    counts.columns = [field + '_cnt']
+    train = train.merge(counts, left_on=field, right_index=1, how='left')
+    test = test.merge(counts, left_on=field, right_index=1, how='left')
+    return train, test
