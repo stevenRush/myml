@@ -7,7 +7,7 @@ def calculate_statistics(train, test, by_field, field, statistics=['mean']):
     train_idx = range(train.shape[0])
     test_idx = range(train.shape[0], df.shape[0])
     temp = df.groupby(by_field).aggregate(statistics)[[field]].reset_index()
-    temp.columns = [by_field, field + '_by_' + by_field + '_mean']
+    temp.columns = [by_field] + [field + '_by_' + by_field + '_{0}'.format(func) for func in statistics]
     df = df.merge(temp, on=by_field, how='left')
     train = df.ix[train_idx, :]
     test = df.ix[test_idx, :]
