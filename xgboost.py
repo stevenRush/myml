@@ -1,5 +1,10 @@
 from sklearn.base import BaseEstimator
 import xgboost as xgb
+import scipy
+from xgboost import cv
+from tp import get_pool
+import numpy as np
+
 
 class XGBEstimator(BaseEstimator):
     def __init__(self, params):
@@ -16,19 +21,12 @@ class XGBEstimator(BaseEstimator):
         
         
 def _xgboost_cv_score(params, X, y, n_fold):
-    import scipy
-    from xgboost import cv
-    
     scipy.random.seed()
     xgtrain = xgb.DMatrix(X, y)
     return cv(params, xgtrain, params['numround'], nfold=n_fold).iloc[:, 0].values
 
     
 def xgboost_average_cross_val_score(params, X, y, n_fold=3, n_iter=5, cores=16):
-    from tp import get_pool
-    import numpy as np
-    import xgboost as xgb
-    
     results = []
     p = get_pool()
     for iter in range(n_iter):

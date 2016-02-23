@@ -1,15 +1,15 @@
+import scipy
+import numpy as np
+from sklearn.cross_validation import cross_val_score, cross_val_predict
+from tp import get_pool
+
 def _cv_score(estimator, X, y, scoring=None, cv=None):
-    import scipy
-    from sklearn.cross_validation import cross_val_score
     
     scipy.random.seed()
     return cross_val_score(estimator, X, y, scoring=scoring, cv=cv)
 
     
 def average_cross_val_score(estimator, X, y, scoring=None, cv=None, n_iter=5, cores=16):
-    from tp import get_pool
-    import numpy as np
-    
     results = []
     p = get_pool()
     for iter in range(n_iter):
@@ -40,8 +40,6 @@ def blend_models(estimator1, estimator2, X1, y1, X2=None, y2=None, n_folds=5, ra
     return scores / 5
 
 def average_blend(estimator1, estimator2, X1, y1, X2=None, y2=None, n_iter=16, n_folds=5):
-    from tp import get_pool
-    
     p = get_pool()
     results = []
     for iter in range(n_iter):
