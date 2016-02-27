@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator
 import xgboost as xgb
 import scipy
-from xgboost import cv
+#from xgboost import cv
 from tp import get_pool
 import numpy as np
 
