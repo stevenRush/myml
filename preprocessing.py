@@ -1,7 +1,7 @@
 import pandas as pd
 
 def calculate_statistics(train, test, by_field, fields, statistics=['mean']):
-    '''Encodes mean of field for every value in by_field'''
+    '''Encodes statistics of field for every value in by_field'''
     
     if isinstance(fields, str):
         fields = [fields]
