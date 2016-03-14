@@ -9,19 +9,28 @@ SCORING_FUNCS = {
     'log_loss': log_loss
 }
 
+def get_classes_count(predictions):
+    if predictions.size == 0:
+        return 0
+    return int(predictions.size * 1. / predictions.shape[0])
 
-def stacking_whole(estimator, train, labels, test, cv):
+
+def stacking_whole(estimator, train, labels, test, cv, fname_prefix=None):
     '''
         Performs stacking with fitting over whole train
     '''
 
     predictions_train = cross_val_predict(estimator, train, labels, cv=cv)
     predictions_test = estimator.fit(train, labels).predict(test)
-    
-    return predictions_train, predictions_test
+
+    if fname_prefix is not None:
+        np.savetxt('{0}_train.csv'.format(fname_prefix), predictions_train)
+        np.savetxt('{0}_test_whole.csv'.format(fname_prefix), predictions_test)
+    else:
+        return predictions_train, predictions_test
 
 
-def stacking_average_byfolds(estimator, train, labels, test, cv):
+def stacking_average_byfolds(estimator, train, labels, test, cv, fname_prefix=None):
     '''
         Performs stacking averaging predictions for test over all folds
     '''
@@ -34,10 +43,50 @@ def stacking_average_byfolds(estimator, train, labels, test, cv):
         preds_train_.append(estimator.predict(train[test_idx]))
         preds_test_.append(estimator.predict(test))
         
-    predictions_count = len(preds_train_[0][0])
-    preds_train = np.zeros(train.shape[0], predictions_count)
-    
-    
+    classes_count = get_classes_count(preds_train_[0])
+    predictions_train = np.zeros(train.shape[0], classes_count)
+
+    for index, (train_idx, test_idx) in enumerate(cv):
+        predictions_train[test_idx] = preds_train_[index]
+
+    predictions_test = np.hstack(preds_test_).mean(axis=1)
+
+    if fname_prefix is not None:
+        np.savetxt('{0}_train.csv'.format(fname_prefix), predictions_train)
+        np.savetxt('{0}_test_average.csv'.format(fname_prefix), predictions_test)
+    else:
+        return predictions_train, predictions_test
+
+
+def stacking_both(estimator, train, labels, test, cv, fname_prefix=None):
+    '''
+        Performs stacking using both methods
+    '''
+
+    preds_train_ = []
+    preds_test_ = []
+
+    for train_idx, test_idx in cv:
+        estimator.fit(train[train_idx], labels[train_idx])
+        preds_train_.append(estimator.predict(train[test_idx]))
+        preds_test_.append(estimator.predict(test))
+
+    classes_count = get_classes_count(preds_train_[0])
+    predictions_train = np.zeros(train.shape[0], classes_count)
+
+    for index, (train_idx, test_idx) in enumerate(cv):
+        predictions_train[test_idx] = preds_train_[index]
+
+    predictions_test = np.hstack(preds_test_).mean(axis=1)
+    predictions_test_whole =  estimator.fit(train, labels).predict(test)
+
+    if fname_prefix is not None:
+        np.savetxt('{0}_train.csv'.format(fname_prefix), predictions_train)
+        np.savetxt('{0}_test_average.csv'.format(fname_prefix), predictions_test)
+        np.savetxt('{0}_test_whole.csv'.format(fname_prefix), predictions_test_whole)
+    else:
+        return predictions_train, predictions_test, predictions_test_whole
+
     
 def blend_models(estimator1, estimator2, X1, y1, X2=None, y2=None, n_folds=5, random_state=42, scoring=None):
     if isinstance(scoring, str):
