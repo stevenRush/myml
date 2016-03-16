@@ -44,7 +44,7 @@ def stacking_average_byfolds(estimator, train, labels, test, cv, fname_prefix=No
         preds_test_.append(estimator.predict(test))
         
     classes_count = get_classes_count(preds_train_[0])
-    predictions_train = np.zeros(train.shape[0], classes_count)
+    predictions_train = np.zeros(shape=(train.shape[0], classes_count))
 
     for index, (train_idx, test_idx) in enumerate(cv):
         predictions_train[test_idx] = preds_train_[index]
@@ -72,7 +72,7 @@ def stacking_both(estimator, train, labels, test, cv, fname_prefix=None):
         preds_test_.append(estimator.predict(test))
 
     classes_count = get_classes_count(preds_train_[0])
-    predictions_train = np.zeros(train.shape[0], classes_count)
+    predictions_train = np.zeros(shape=(train.shape[0], classes_count))
 
     for index, (train_idx, test_idx) in enumerate(cv):
         predictions_train[test_idx] = preds_train_[index]
