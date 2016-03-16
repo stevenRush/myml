@@ -7,7 +7,7 @@ class ProbaEstimator(BaseEstimator):
 
     def fit(self, X, y):
         self.estimator.fit(X, y)
-
+        return self
     def predict(self, X):
         return self.estimator.predict_proba(X)
 

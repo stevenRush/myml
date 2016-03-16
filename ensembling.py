@@ -44,16 +44,15 @@ def stacking_average_byfolds(estimator, train, labels, test, cv, fname_prefix=No
         preds_test_.append(estimator.predict(test))
         
     classes_count = get_classes_count(preds_train_[0])
-    if classes_count == 1:
-        predictions_train_shape = (train.shape[0], )
-    else:
-        predictions_train_shape = (train.shape[0], classes_count)
-    predictions_train = np.zeros(shape=predictions_train_shape)
+    predictions_train = np.zeros(shape=(train.shape[0], classes_count))
 
     for index, (train_idx, test_idx) in enumerate(cv):
-        predictions_train[test_idx] = preds_train_[index]
+        predictions_train[test_idx] = preds_train_[index].reshape(-1, classes_count)
 
-    predictions_test = np.hstack(preds_test_).mean(axis=1)
+    predictions_test = np.zeros(shape=(test.shape[0], classes_count), dtype=float)
+    for preds_test in preds_test_:
+        predictions_test += preds_test.reshape(-1, classes_count)
+    predictions_test /= len(preds_test_)
 
     if fname_prefix is not None:
         np.savetxt('{0}_train.csv'.format(fname_prefix), predictions_train)
@@ -76,16 +75,16 @@ def stacking_both(estimator, train, labels, test, cv, fname_prefix=None):
         preds_test_.append(estimator.predict(test))
 
     classes_count = get_classes_count(preds_train_[0])
-    if classes_count == 1:
-        predictions_train_shape = (train.shape[0], )
-    else:
-        predictions_train_shape = (train.shape[0], classes_count)
-    predictions_train = np.zeros(shape=predictions_train_shape)
+    predictions_train = np.zeros(shape=(train.shape[0], classes_count))
 
     for index, (train_idx, test_idx) in enumerate(cv):
-        predictions_train[test_idx] = preds_train_[index]
+        predictions_train[test_idx] = preds_train_[index].reshape(-1, classes_count)
 
-    predictions_test = np.hstack(preds_test_).mean(axis=1)
+    predictions_test = np.zeros(shape=(test.shape[0], classes_count), dtype=float)
+    for preds_test in preds_test_:
+        predictions_test += preds_test.reshape(-1, classes_count)
+    predictions_test /= len(preds_test_)
+
     predictions_test_whole =  estimator.fit(train, labels).predict(test)
 
     if fname_prefix is not None:
