@@ -15,10 +15,13 @@ def get_classes_count(predictions):
     return int(predictions.size * 1. / predictions.shape[0])
 
 
-def stacking_whole(estimator, train, labels, test, cv, fname_prefix=None):
+def stacking_whole(estimator, train, labels, test, cv, fname_prefix=None, proba=False):
     '''
         Performs stacking with fitting over whole train
     '''
+
+    if proba:
+        estimator = ProbaEstimator(estimator)
 
     predictions_train = cross_val_predict(estimator, train, labels, cv=cv)
     predictions_test = estimator.fit(train, labels).predict(test)
@@ -30,10 +33,13 @@ def stacking_whole(estimator, train, labels, test, cv, fname_prefix=None):
         return predictions_train, predictions_test
 
 
-def stacking_average_byfolds(estimator, train, labels, test, cv, fname_prefix=None):
+def stacking_average_byfolds(estimator, train, labels, test, cv, fname_prefix=None, proba=False):
     '''
         Performs stacking averaging predictions for test over all folds
     '''
+
+    if proba:
+        estimator = ProbaEstimator(estimator)
 
     preds_train_ = []
     preds_test_ = []
@@ -61,10 +67,13 @@ def stacking_average_byfolds(estimator, train, labels, test, cv, fname_prefix=No
         return predictions_train, predictions_test
 
 
-def stacking_both(estimator, train, labels, test, cv, fname_prefix=None):
+def stacking_both(estimator, train, labels, test, cv, fname_prefix=None, proba=False):
     '''
         Performs stacking using both methods
     '''
+
+    if proba:
+        estimator = ProbaEstimator(estimator)
 
     preds_train_ = []
     preds_test_ = []
