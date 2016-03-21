@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def calculate_statistics(train, test, by_field, fields, statistics=['mean']):
     '''Encodes statistics of field for every value in by_field'''
@@ -30,3 +31,16 @@ def calculate_counts(train, test, field):
     train = train.merge(counts, left_on=field, right_index=1, how='left')
     test = test.merge(counts, left_on=field, right_index=1, how='left')
     return train, test
+
+
+def log1p_negative(array):
+    negative = array < 0
+    array = np.log1p(np.abs(array))
+    array[negative] *= -1
+    return array
+
+def sqrt_negative(array):
+    negative = array < 0
+    array = np.abs(array) ** 0.5
+    array[negative] *= -1
+    return array
