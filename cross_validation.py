@@ -15,6 +15,10 @@ def average_cross_val_score(estimator, X, y, scoring=None, cv=None, n_iter=5, co
     for iter in range(n_iter):
         results.append(p.apply_async(_cv_score, args=(estimator, X, y), kwds={'scoring':scoring, 'cv':cv}))
     return np.vstack([result.get() for result in results])
+
+
+def holdout_score(estimator, X, y, scoring=None, test_size=0.2, random_state=None):
+    pass
     
     
 def blend_models(estimator1, estimator2, X1, y1, X2=None, y2=None, n_folds=5, random_state=42):
