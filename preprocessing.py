@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from sklearn.base import BaseEstimator
+from sklearn.cross_validation import cross_val_predict
 
 def calculate_statistics(train, test, by_field, fields, statistics=['mean']):
     '''Encodes statistics of field for every value in by_field'''
@@ -34,6 +36,30 @@ def calculate_counts(train, test, field, drop=False):
     if drop:
         train.drop(field, axis=1, inplace=1)
         test.drop(field, axis=1, inplace=1)
+
+    return train, test
+
+
+class _TargetMeanEncoder(BaseEstimator):
+    def __init__(self, field):
+        self.field = field
+
+    def fit(self, X, y):
+        field_df = pd.DataFrame({self.field: X[self.field], 'target': y})
+        self.means = field_df.groupby(self.field).mean().reset_index()
+        self.target_mean = y.mean()
+        return self
+
+    def predict(self, X):
+        mean_code = X[[self.field]].merge(self.means, on=self.field, how='left')['target']
+        return mean_code.fillna(self.target_mean)
+
+def calculate_target_mean(train, test, labels, field, cv):
+    train_mean = cross_val_predict(_TargetMeanEncoder(field), train, labels, cv=cv)
+    test_mean = _TargetMeanEncoder(field).fit(train, labels).predict(test)
+
+    train[field + '_target_mean'] = train_mean
+    test[field + '_target_mean'] = test_mean
 
     return train, test
 
