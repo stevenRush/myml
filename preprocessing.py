@@ -21,7 +21,7 @@ def calculate_statistics(train, test, by_field, fields, statistics=['mean']):
     return train, test
 
 
-def calculate_counts(train, test, field):
+def calculate_counts(train, test, field, drop=False):
     df = pd.concat([train, test]).reset_index(drop = True)
     train_idx = range(train.shape[0])
     test_idx = range(train.shape[0], df.shape[0])
@@ -30,6 +30,11 @@ def calculate_counts(train, test, field):
     counts.columns = [field + '_cnt']
     train = train.merge(counts, left_on=field, right_index=1, how='left')
     test = test.merge(counts, left_on=field, right_index=1, how='left')
+
+    if drop:
+        train.drop(field, axis=1, inplace=1)
+        test.drop(field, axis=1, inplace=1)
+
     return train, test
 
 
