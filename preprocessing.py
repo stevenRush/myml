@@ -40,30 +40,40 @@ def calculate_counts(train, test, field, drop=False):
     return train, test
 
 
-class _TargetMeanEncoder(BaseEstimator):
-    def __init__(self, field, target_mean, smooth):
+class _TargetEncoder(BaseEstimator):
+    def __init__(self, field, functions, default_values, smooth):
         self.field = field
         self.smooth = smooth
-        self.target_mean = target_mean
+        self.functions = functions
+        self.default_values = default_values
 
     def fit(self, X, y):
         field_df = pd.DataFrame({self.field: X[self.field], 'target': y})
-        self.means = field_df.groupby(self.field).aggregate(['mean', 'count']).reset_index()
+        self.means = field_df.groupby(self.field).aggregate(['count'] + self.functions).reset_index()
         self.means.columns = [self.field] + list(self.means.columns[1:].get_level_values(1))
-        self.means['mean_target'] = self.target_mean + 2. / np.pi * np.arctan(np.log1p(self.means['count'])) * (self.means['mean'] - self.target_mean)
+
+        if self.smooth:
+            for func, default_value in zip(self.functions, self.default_values):
+                self.means[func] = default_value + 2. / np.pi * np.arctan(np.log1p(self.means['count'])) * (self.means[func] - default_value)
+
         return self
 
     def predict(self, X):
-        mean_code = X[[self.field]].merge(self.means, on=self.field, how='left')['mean_target']
-        return mean_code.fillna(self.target_mean)
+        mean_code = X[[self.field]].merge(self.means, on=self.field, how='left')[self.functions]
+        for func, default_value in zip(self.functions, self.default_values):
+            mean_code[func] = mean_code[func].fillna(default_value)
+        return mean_code
 
-def calculate_target_mean(train, test, labels, field, cv, smooth=True):
-    label_mean = labels.mean()
-    train_mean = cross_val_predict(_TargetMeanEncoder(field, label_mean, smooth), train, labels, cv=cv)
-    test_mean = _TargetMeanEncoder(field, label_mean, smooth).fit(train, labels).predict(test)
+def calculate_target_mean(train, test, labels, field, cv, functions=[np.mean, ], smooth=True):
+    default_values = [func(labels) for func in functions]
+    function_names = [func.__name__ for func in functions]
 
-    train[field + '_target_mean'] = train_mean
-    test[field + '_target_mean'] = test_mean
+    train_encodings = cross_val_predict(_TargetEncoder(field, function_names, default_values, smooth), train, labels, cv=cv)
+    test_encodings = _TargetEncoder(field, function_names, default_values, smooth).fit(train, labels).predict(test).values
+
+    for index, func_name in enumerate(function_names):
+        train[field + '_target_' + func_name] = train_encodings[:, index]
+        test[field + '_target_' + func_name] = test_encodings[:, index]
 
     return train, test
 
