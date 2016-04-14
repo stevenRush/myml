@@ -122,16 +122,11 @@ def blend_models(estimator1, estimator2, X1, y1, X2=None, y2=None, n_folds=5, ra
     cv = StratifiedKFold(y1, n_folds=n_folds, random_state=random_state)
     preds1 = cross_val_predict(ProbaEstimator(estimator1), X1, y1, cv=cv)
     preds2 = cross_val_predict(ProbaEstimator(estimator2), X2, y2, cv=cv)
-    
-    for train_idx, test_idx in cv:
-        pr1 = preds1[test_idx]
-        pr2 = preds2[test_idx]
-        truth = y1[test_idx]
 
-        for index, alpha in enumerate(weights):
-            if need_argmax:
-                preds = np.argmax(alpha * pr1 + (1-alpha) * pr2, axis=1)
-            else:
-                preds = alpha * pr1 + (1-alpha) * pr2
-            scores[index] += scoring(truth, preds)
-    return scores / 5
+    for index, alpha in enumerate(weights):
+        if need_argmax:
+            preds = np.argmax(alpha * preds1 + (1-alpha) * preds2, axis=1)
+        else:
+            preds = alpha * preds1 + (1-alpha) * preds2
+        scores[index] += scoring(y1, preds)
+    return scores

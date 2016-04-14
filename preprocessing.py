@@ -41,22 +41,26 @@ def calculate_counts(train, test, field, drop=False):
 
 
 class _TargetMeanEncoder(BaseEstimator):
-    def __init__(self, field):
+    def __init__(self, field, target_mean, smooth):
         self.field = field
+        self.smooth = smooth
+        self.target_mean = target_mean
 
     def fit(self, X, y):
         field_df = pd.DataFrame({self.field: X[self.field], 'target': y})
-        self.means = field_df.groupby(self.field).mean().reset_index()
-        self.target_mean = y.mean()
+        self.means = field_df.groupby(self.field).aggregate(['mean', 'count']).reset_index()
+        self.means.columns = [self.field] + list(self.means.columns[1:].get_level_values(1))
+        self.means['mean_target'] = self.target_mean + 2. / np.pi * np.arctan(np.log1p(self.means['count'])) * (self.means['mean'] - self.target_mean)
         return self
 
     def predict(self, X):
-        mean_code = X[[self.field]].merge(self.means, on=self.field, how='left')['target']
+        mean_code = X[[self.field]].merge(self.means, on=self.field, how='left')['mean_target']
         return mean_code.fillna(self.target_mean)
 
-def calculate_target_mean(train, test, labels, field, cv):
-    train_mean = cross_val_predict(_TargetMeanEncoder(field), train, labels, cv=cv)
-    test_mean = _TargetMeanEncoder(field).fit(train, labels).predict(test)
+def calculate_target_mean(train, test, labels, field, cv, smooth=True):
+    label_mean = labels.mean()
+    train_mean = cross_val_predict(_TargetMeanEncoder(field, label_mean, smooth), train, labels, cv=cv)
+    test_mean = _TargetMeanEncoder(field, label_mean, smooth).fit(train, labels).predict(test)
 
     train[field + '_target_mean'] = train_mean
     test[field + '_target_mean'] = test_mean
