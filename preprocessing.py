@@ -11,6 +11,8 @@ def calculate_statistics(train, test, by_field, fields, statistics=['mean']):
     if isinstance(statistics, str):
         statistics = [statistics]
 
+    fields = list(set(fields) - set(by_field))
+
     df = pd.concat([train, test]).reset_index(drop = True)
     train_idx = range(train.shape[0])
     test_idx = range(train.shape[0], df.shape[0])
