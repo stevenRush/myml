@@ -70,11 +70,6 @@ def calculate_target_mean(train, test, labels, field, cv, functions=[np.mean, ],
     default_values = [func(labels) for func in functions]
     function_names = [func.__name__ for func in functions]
 
-    if train[field].value_counts().min() < 20:
-        smooth = True
-    else:
-        smooth = False
-
     train_encodings = cross_val_predict(_TargetEncoder(field, function_names, default_values, smooth), train, labels, cv=cv)
     test_encodings = _TargetEncoder(field, function_names, default_values, smooth).fit(train, labels).predict(test).values
 
