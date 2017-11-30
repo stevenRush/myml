@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.cross_validation import cross_val_predict
+from sklearn.model_selection import cross_val_predict
 
 def calculate_statistics(train, test, by_field, fields, statistics=['mean']):
     '''Encodes statistics of field for every value in by_field'''
